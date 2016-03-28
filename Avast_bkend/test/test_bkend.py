@@ -4,6 +4,7 @@ import unittest, requests, json, os
 class TestHttpRequest(unittest.TestCase):
     bkend_url = 'http://127.0.0.1:5000'
     post_url = 'http://127.0.0.1:5000/add'
+    delete_url = 'http://127.0.0.1:5000/delete'
 
     def setUp(self):
         pass
@@ -25,7 +26,10 @@ class TestHttpRequest(unittest.TestCase):
     def test_parse_response_3(self):
         # Response json
         r = requests.get(self.bkend_url)
-        print(r.json())
+        payload = r.json()
+        print(payload)
+        print(payload['items'][0]['title'])
+
 
     def test_parse_response_4(self):
         # Response raw
@@ -42,7 +46,9 @@ class TestHttpRequest(unittest.TestCase):
         # pass by json parameter
         payload = {'title': 'Tom'}
         r = requests.post(self.post_url, json=payload)
-        print(r.json())
+        res = r.json()
+        print(res)
+        self.assertEqual(payload['title'], res['items'][0]['title'])
 
     def test_post_3(self):
         # pass by file
@@ -55,6 +61,40 @@ class TestHttpRequest(unittest.TestCase):
         # files = {'file': open(json_file, 'rb')}
         r = requests.post(self.post_url, json=payload)
         print(r.json())
+
+    def test_status_code_1(self):
+        # status_code
+        r = requests.get(self.bkend_url)
+        print(r.status_code)
+
+    def test_status_code_2(self):
+        # requests.codes.ok
+        r = requests.get(self.bkend_url)
+        self.assertEqual(requests.codes.ok, r.status_code)
+
+    def test_headers(self):
+        # check headers in python dic
+        r = requests.get(self.bkend_url)
+        print(r.headers)
+        print(r.headers['Content-Type'])
+
+    def test_delete_1(self):
+        # delete entry
+
+        # Get the latest entry
+        r = requests.get(self.bkend_url)
+        payload = r.json()
+        the_id = payload['items'][0]['id']
+        the_title = payload['items'][0]['title']
+
+        path = (self.delete_url, str(the_id))
+        delete_path = '/'.join(path)
+        # delete entry
+        res = requests.delete(delete_path)
+        self.assertEqual(requests.codes.ok, res.status_code)
+        # assert delete successful
+        after_delete = res.json()
+        self.assertNotEqual(the_id, after_delete['items'][0]['id'])
 
 if __name__ == "__main__":
     unittest.main()
